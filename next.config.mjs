@@ -1,27 +1,33 @@
-// next.config.mjs  ← YOUR FILE (keep as .mjs)
+// review-saas/next.config.mjs
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ✅ Remove experimental middleware if you have it
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.googleusercontent.com',
-      },
-    ],
-  },
 
-  // ✅ Fix for Windows path issues
-  // ✅ Suppress specific warnings
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
+  // ✅ Allow ngrok domain
+  allowedDevOrigins: [
+    'bloating-jarring-yanking.ngrok-free.dev',
+    '*.ngrok-free.dev',
+    '*.ngrok-free.app',
+    '*.ngrok.io',
+  ],
+
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,POST,PUT,DELETE,OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, ngrok-skip-browser-warning',
+          },
+        ],
+      },
+    ];
   },
 };
 

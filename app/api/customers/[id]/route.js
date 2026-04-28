@@ -1,27 +1,25 @@
+// review-saas/app/api/customers/[id]/route.js
+
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/mongodb';
+import { getAuthUser } from '@/lib/mobileAuth';
 import Customer from '@/models/Customer';
 import ReviewRequest from '@/models/ReviewRequest';
 
-// DELETE customer
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const resolvedParams = await params;
+    const user = await getAuthUser(req);
+
+    if (!user) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    await connectDB();
-
-    // Make sure customer belongs to this user
     const customer = await Customer.findOne({
-      _id: params.id,
-      userId: session.user.id
+      _id: resolvedParams.id,
+      userId: user._id,
     });
 
     if (!customer) {
@@ -31,18 +29,18 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    // Delete customer and their review requests
     await Promise.all([
-      Customer.findByIdAndDelete(params.id),
-      ReviewRequest.deleteMany({ customerId: params.id })
+      Customer.findByIdAndDelete(resolvedParams.id),
+      ReviewRequest.deleteMany({ customerId: resolvedParams.id }),
     ]);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Customer deleted' 
+      message: 'Customer deleted',
     });
 
   } catch (error) {
+    console.error('Delete customer error:', error.message);
     return NextResponse.json(
       { error: 'Failed to delete customer' },
       { status: 500 }

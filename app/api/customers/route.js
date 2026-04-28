@@ -1,46 +1,96 @@
+// review-saas/app/api/customers/route.js
+
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/mongodb';
+import { getAuthUser } from '@/lib/mobileAuth';
 import Customer from '@/models/Customer';
 
-// GET - List customers
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    // ✅ Works for BOTH web (NextAuth) and mobile (Bearer token)
+    const user = await getAuthUser(req);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
+    const search = searchParams.get('search') || '';
     const limit = 20;
+    const skip = (page - 1) * limit;
 
-    await connectDB();
+    const query = { userId: user._id };
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
 
-    const customers = await Customer
-      .find({ userId: session.user.id })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const [customers, totalCount] = await Promise.all([
+      Customer.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Customer.countDocuments(query),
+    ]);
 
-    return NextResponse.json({ success: true, customers });
+    // ✅ Serialize for mobile
+    const serialized = customers.map((c) => ({
+      _id: c._id.toString(),
+      userId: c.userId ? c.userId.toString() : '',
+      name: c.name || '',
+      email: c.email || '',
+      phone: c.phone || '',
+      reviewRequestSent: c.reviewRequestSent || false,
+      sentAt: c.sentAt ? c.sentAt.toISOString() : null,
+      createdAt: c.createdAt ? c.createdAt.toISOString() : null,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      customers: serialized,
+      totalCount,
+      page,
+    });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    console.error('Customers GET error:', error.message);
+    return NextResponse.json(
+      { error: 'Failed to fetch customers' },
+      { status: 500 }
+    );
   }
 }
 
-// POST - Add customer
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    const user = await getAuthUser(req);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
     }
 
-    const { name, email, phone } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    const name = (body.name || '').trim();
+    const email = (body.email || '').toLowerCase().trim();
+    const phone = (body.phone || '').trim();
 
     if (!name || !email) {
       return NextResponse.json(
@@ -49,39 +99,42 @@ export async function POST(req) {
       );
     }
 
-    await connectDB();
-
-    // Check duplicate
     const exists = await Customer.findOne({
-      userId: session.user.id,
-      email: email.toLowerCase()
+      userId: user._id,
+      email,
     });
 
     if (exists) {
       return NextResponse.json(
-        { error: 'Customer with this email already exists' },
+        { error: 'Customer already exists' },
         { status: 409 }
       );
     }
 
     const customer = await Customer.create({
-      userId: session.user.id,
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      phone: phone || ''
+      userId: user._id,
+      name,
+      email,
+      phone,
     });
 
-    return NextResponse.json({
-      success: true,
-      customer: {
-        ...customer.toObject(),
-        _id: customer._id.toString()
-      }
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        customer: {
+          _id: customer._id.toString(),
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+        },
+      },
+      { status: 201 }
+    );
 
   } catch (error) {
+    console.error('Customers POST error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to add customer' },
+      { error: 'Failed to create customer' },
       { status: 500 }
     );
   }

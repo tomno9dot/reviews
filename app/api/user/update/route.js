@@ -1,16 +1,14 @@
-// app/api/user/update/route.js
+// review-saas/app/api/user/update/route.js
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/mongodb';
+import { getAuthUser } from '@/lib/mobileAuth';
 import User from '@/models/User';
 
 export async function PUT(req) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -47,9 +45,7 @@ export async function PUT(req) {
       );
     }
 
-    await connectDB();
-
-    await User.findByIdAndUpdate(session.user.id, {
+    await User.findByIdAndUpdate(user._id, {
       name: name.trim(),
       businessName: businessName.trim(),
       businessType: businessType || 'other',
@@ -65,9 +61,9 @@ export async function PUT(req) {
     });
 
   } catch (error) {
-    console.error('Update settings error:', error);
+    console.error('Update settings error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to update settings. Please try again.' },
+      { error: 'Failed to update settings' },
       { status: 500 }
     );
   }
