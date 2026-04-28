@@ -1,103 +1,119 @@
+// models/User.js
+// DELETE old file content and paste this exactly
+
 import mongoose from 'mongoose';
 
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  businessName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  businessType: {
-    type: String,
-    enum: [
-      'restaurant', 
-      'salon', 
-      'clinic', 
-      'retail', 
-      'hotel',
-      'pharmacy',
-      'gym',
-      'other'
-    ],
-    default: 'other'
-  },
-  googleReviewLink: {
-    type: String,
-    default: ''
-  },
-  // Paystack subscription details
-  plan: {
-    type: String,
-    enum: ['free', 'starter', 'pro'],
-    default: 'free'
-  },
-  paystackCustomerCode: {
-    type: String,
-    default: ''
-  },
-  paystackSubscriptionCode: {
-    type: String,
-    default: ''
-  },
-  subscriptionStatus: {
-    type: String,
-    enum: ['active', 'inactive', 'cancelled'],
-    default: 'inactive'
-  },
-  subscriptionEndDate: {
-    type: Date,
-    default: null
-  },
-  // Usage tracking
-  reviewRequestsSentThisMonth: {
-    type: Number,
-    default: 0
-  },
-  lastResetDate: {
-    type: Date,
-    default: Date.now
-  }
-}, { 
-  timestamps: true 
-});
+// ✅ Force clear cached model
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
 
-// Check monthly limit
-UserSchema.methods.canSendRequest = function() {
-  const limits = {
-    free: 10,
-    starter: 100,
-    pro: 999999 // unlimited
-  };
-  
-  return this.reviewRequestsSentThisMonth < limits[this.plan];
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+    },
+    businessName: {
+      type: String,
+      required: [true, 'Business name is required'],
+      trim: true,
+    },
+    businessType: {
+      type: String,
+      enum: [
+        'restaurant',
+        'salon',
+        'clinic',
+        'retail',
+        'hotel',
+        'pharmacy',
+        'gym',
+        'other',
+      ],
+      default: 'other',
+    },
+    googleReviewLink: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    plan: {
+      type: String,
+      enum: ['free', 'starter', 'pro'],
+      default: 'free',
+    },
+    paystackCustomerCode: {
+      type: String,
+      default: '',
+    },
+    paystackSubscriptionCode: {
+      type: String,
+      default: '',
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ['active', 'inactive', 'cancelled'],
+      default: 'inactive',
+    },
+    subscriptionEndDate: {
+      type: Date,
+      default: null,
+    },
+    reviewRequestsSentThisMonth: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lastResetDate: {
+      type: Date,
+      default: Date.now,
+    },
+    trialStartDate: {
+      type: Date,
+      default: Date.now,
+    },
+    trialEndDate: {
+      type: Date,
+      default: () =>
+        new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    },
+    expoPushToken: {
+      type: String,
+      default: '',
+    },
+  },
+  {
+    timestamps: true,
+    collection: 'users',
+  }
+);
+
+UserSchema.methods.canSendRequest = function () {
+  const limits = { free: 10, starter: 100, pro: 999999 };
+  return (
+    this.reviewRequestsSentThisMonth < (limits[this.plan] || 10)
+  );
 };
 
-// Reset monthly count
-UserSchema.methods.resetMonthlyCount = function() {
-  const now = new Date();
-  const lastReset = new Date(this.lastResetDate);
-  
-  if (now.getMonth() !== lastReset.getMonth()) {
-    this.reviewRequestsSentThisMonth = 0;
-    this.lastResetDate = now;
-  }
-};
+const User = mongoose.model('User', UserSchema);
 
-export default mongoose.models.User || 
-  mongoose.model('User', UserSchema);
+export default User;
