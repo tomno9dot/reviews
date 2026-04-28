@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ReviewBoost 🌟
 
-## Getting Started
+> Automatically send Google review requests 
+> to customers. Get 3x more reviews in 30 days.
 
-First, run the development server:
+[![Live Demo](https://img.shields.io/badge/Live-reviewboost.app-purple)](https://reviewboost.app)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
+[![React Native](https://img.shields.io/badge/React_Native-Expo-blue)](https://expo.dev)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)](https://mongodb.com)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 What I Built
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A complete SaaS product built solo from scratch:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Web App** — Next.js 14 dashboard with analytics
+- **Mobile App** — React Native + Expo (iOS/Android)
+- **REST API** — Node.js + Express backend
+- **Payments** — Paystack subscription billing
+- **Emails** — Automated Resend email system
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💻 Tech Stack
 
-## Learn More
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14, React, Tailwind CSS |
+| Mobile | React Native, Expo |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas |
+| Auth | NextAuth.js, JWT |
+| Email | Resend API |
+| Payments | Paystack |
+| Deploy | Vercel + Railway |
 
-To learn more about Next.js, take a look at the following resources:
+## ✨ Key Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ⭐ Automated review request emails
+- 📊 Analytics dashboard with charts
+- 👥 Customer management system
+- 📱 Mobile app for on-the-go requests
+- 🔔 Auto follow-up email sequences
+- 💳 Subscription billing
+- 🎁 Referral program
+- 🌍 Available in 50+ countries
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Live Demo
 
-## Deploy on Vercel
+→ **Web:** https://reviewboost.app  
+→ **Play Store:** [Download App]()
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Built with ❤️ by Bill Tomno
